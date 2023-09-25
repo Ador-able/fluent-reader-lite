@@ -9,6 +9,25 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 class FeedPage extends StatelessWidget {
+
+  /*
+    该函数是一个Dart函数，用于打开一个手势选项页面。函数接受两个参数：context和isToRight。
+    context是构建上下文，用于访问当前的UI上下文信息；
+    isToRight是一个布尔值，表示手势是从右向左滑动还是从左向右滑动。
+
+    函数内部使用Navigator.of(context).push()来导航到一个新的页面。
+    这个新页面是一个CupertinoPageRoute，使用CupertinoPageScaffold作为页面的基本框架。
+    CupertinoPageScaffold有
+    一个背景颜色属性backgroundColor，设置为MyColors.background；
+    一个navigationBar属性，用于设置导航栏，其中middle属性是一个Text，显示根据isToRight参数决定的文本；一个child属性，用于设置页面的主要内容。
+    页面的主要内容是一个Consumer<FeedsModel>，用于监听FeedsModel的改变并构建UI。
+
+    Consumer<FeedsModel>的builder属性是一个函数，接受三个参数：context、feedsModel和child。
+    在这个函数内部，定义了一个swipeOptons列表，包含了手势选项的文本和对应的操作。
+    然后使用ListView来展示这些选项，每个选项都是一个ListTileGroup，通过ListTileGroup.fromOptions()方法从swipeOptons列表中创建。
+    ListTileGroup.fromOptions()方法接受三个参数：选项列表、当前选中的选项和一个回调函数。
+    当用户选择一个选项时，回调函数会被调用，并更新FeedsModel中的swipeR或swipeL属性，具体取决于isToRight参数的值
+   */
   void _openGestureOptions(BuildContext context, bool isToRight) {
     Navigator.of(context).push(CupertinoPageRoute(
       builder: (context) => CupertinoPageScaffold(
@@ -42,13 +61,17 @@ class FeedPage extends StatelessWidget {
   }
 
   @override
+  // Flutter中Widget的生命周期方法，用于生成UI。它接收一个BuildContext参数，用于获取当前构建上下文信息
   Widget build(BuildContext context) {
+    // CupertinoPageScaffold：这是一个iOS风格的页面框架，提供了导航栏和背景颜色等功能
     return CupertinoPageScaffold(
       backgroundColor: MyColors.background,
+      // navigationBar：定义了导航栏，其中middle属性设置了导航栏中间的文本。
       navigationBar: CupertinoNavigationBar(
         middle: Text(S.of(context).feed),
       ),
       child: Consumer<FeedsModel>(
+        // Consumer<FeedsModel>：这是一个依赖注入Widget，用于监听FeedsModel的改变并实时更新UI。builder方法接收context，feedsModel和child参数，返回一个Widget。
         builder: (context, feedsModel, child) {
           final swipeOptons = {
             ItemSwipeOption.ToggleRead: S.of(context).toggleRead,

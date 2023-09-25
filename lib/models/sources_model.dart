@@ -9,12 +9,18 @@ import 'package:sqflite/sqflite.dart';
 
 import 'item.dart';
 
+/**
+ * 这是一个名为SourcesModel的Dart类，它管理一组RSSSource对象。它使用ChangeNotifier混入，以便在源数据发生变化时通知监听器。
+ * 类中有多个方法用于操作源，如添加、更新和删除源。此外，还有从数据库初始化源、更新未读计数和获取图标的方法。
+ * 类使用全局Global.db对象进行数据库操作，并使用Global.service对象从服务端获取源数据。
+ */
 class SourcesModel with ChangeNotifier {
   Map<String, RSSSource> _sources = Map();
   Map<String, RSSSource> _deleted = Map();
   bool _showUnreadTip = Store.sp.getBool(StoreKeys.UNREAD_SOURCE_TIP) ?? true;
 
   bool get showUnreadTip => _showUnreadTip;
+
   set showUnreadTip(bool value) {
     if (_showUnreadTip != value) {
       _showUnreadTip = value;

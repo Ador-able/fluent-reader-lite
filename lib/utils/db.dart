@@ -43,6 +43,22 @@ abstract class DatabaseHelper {
         thumb TEXT
       );
     ''');
+    await db.execute('''
+    CREATE TABLE items (
+        iid TEXT PRIMARY KEY,
+        source TEXT NOT NULL,
+        title TEXT NOT NULL,
+        link TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        snippet TEXT NOT NULL,
+        hasRead INTEGER NOT NULL,
+        starred INTEGER NOT NULL,
+        creator TEXT,
+        thumb TEXT
+      );
+    ''');
+    await db.execute("CREATE TABLE searchValues(value TEXT PRIMARY KEY);");
     await db.execute("CREATE INDEX itemsDate ON items (date DESC);");
   }
 }

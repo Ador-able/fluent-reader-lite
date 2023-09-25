@@ -28,18 +28,38 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'generated/l10n.dart';
 import 'models/global_model.dart';
 
+/**
+ * 应用程序的主入口函数。
+ * 该函数初始化Flutter的Widget绑定，确保SharedPreferences实例被初始化并创建全局配置。
+ * 对于Android平台，还会调整状态栏样式并使用SurfaceAndroidWebView作为WebView平台。
+ * 最后，运行应用程序的主要Widget树，并设置生命周期消息处理器以处理应用恢复事件。
+ */
 void main() async {
+  // 初始化Flutter的Widget绑定
   WidgetsFlutterBinding.ensureInitialized();
+  // 获取SharedPreferences的实例，并赋值给全局变量
+  // SharedPreferences的实例在Dart（尤其是Flutter）中用于存储应用的轻量级持久化数据，通常是用户偏好设置、配置信息或其他小型数据。以下是一些使用SharedPreferences实例的常见用途：
+  // 用户偏好设置：保存用户选择的语言、主题、音量设置等。
+  // 应用配置：存储应用的配置信息，比如API密钥、默认值或用户首次启动应用的标志。
+  // 临时数据：如果需要在应用会话之间保持一些临时数据，但不需要数据库级别的存储，可以使用SharedPreferences。
+  // 登录状态：保存用户登录状态，以便在下次打开应用时自动登录（通常配合令牌或布尔值）。
+  // 统计信息：记录用户的行为或应用的使用统计数据。
+  // 以下是一个简单的Dart代码示例，展示了如何获取SharedPreferences实例以及如何使用它来存储和检索数据：
   Store.sp = await SharedPreferences.getInstance();
+  // 进行全局初始化
   Global.init();
+  // 如果是Android平台，则设置状态栏透明，并指定WebView使用SurfaceAndroidWebView
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
     ));
     WebView.platform = SurfaceAndroidWebView();
   }
+  // 运行应用的主Widget
   runApp(MyApp());
+  // 设置系统生命周期通道的消息处理器
   SystemChannels.lifecycle.setMessageHandler((msg) {
+    // 当应用从后台回到前台时，重启服务器并根据配置同步数据
     if (msg == AppLifecycleState.resumed.toString()) {
       if (Global.server != null) Global.server.restart();
       if (Global.globalModel.syncOnStart &&
@@ -51,6 +71,7 @@ void main() async {
     return null;
   });
 }
+
 
 class MyApp extends StatelessWidget {
   static final Map<String, Widget Function(BuildContext)> baseRoutes = {
@@ -120,6 +141,7 @@ class MyApp extends StatelessWidget {
             const Locale("uk"),
             const Locale("hr"),
             const Locale("pt"),
+            const Locale("tr"),
           ],
           localeResolutionCallback: (_locale, supportedLocales) {
             _locale = Locale(_locale.languageCode);
@@ -135,7 +157,12 @@ class MyApp extends StatelessWidget {
             brightness: globalModel.getBrightness(),
           ),
           routes: {
-            "/": (context) => CupertinoScaffold(body: HomePage()),
+            "/": (context) => CupertinoScaffold(
+                body: CupertinoTheme(
+                    // For fixing the bug with modal_bottom_sheet overriding primary color
+                    data: CupertinoThemeData(
+                        primaryColor: CupertinoColors.activeBlue),
+                    child: HomePage())),
             ...baseRoutes,
           },
           builder: (context, child) {

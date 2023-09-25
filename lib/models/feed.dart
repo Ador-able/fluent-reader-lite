@@ -4,9 +4,7 @@ import 'package:tuple/tuple.dart';
 
 import 'item.dart';
 
-enum FilterType {
-  All, Unread, Starred
-}
+enum FilterType { All, Unread, Starred }
 
 const _LOAD_LIMIT = 50;
 
@@ -25,8 +23,8 @@ class RSSFeed {
   }
 
   String get _filterKey => sids.length == 0
-    ? StoreKeys.FEED_FILTER_ALL
-    : StoreKeys.FEED_FILTER_SOURCE;
+      ? StoreKeys.FEED_FILTER_ALL
+      : StoreKeys.FEED_FILTER_SOURCE;
 
   Tuple2<String, List<String>> _getPredicates() {
     List<String> where = ["1 = 1"];
@@ -42,8 +40,8 @@ class RSSFeed {
       where.add("starred = 1");
     }
     if (search != "") {
-      where.add("(UPPER(title) LIKE ? OR UPPER(snippet) LIKE ?)");
-      var keyword = "%$search%".toUpperCase();
+      where.add("(UPPER(title) REGEXP ? OR UPPER(snippet) REGEXP ?)");
+      var keyword = ".*($search).*".toUpperCase();
       whereArgs.add(keyword);
       whereArgs.add(keyword);
     }
@@ -67,16 +65,22 @@ class RSSFeed {
     if (loading) return;
     loading = true;
     var predicates = _getPredicates();
-    var items = (await Global.db.query(
-      "items",
-      orderBy: "date DESC",
-      limit: _LOAD_LIMIT,
-      where: predicates.item1,
-      whereArgs: predicates.item2,
-    )).map((m) => RSSItem.fromMap(m)).toList();
-    allLoaded = items.length < _LOAD_LIMIT;
-    Global.itemsModel.loadItems(items);
-    iids = items.map((i) => i.id).toList();
+    try {
+      var items = (await Global.db.query(
+        "items",
+        orderBy: "date DESC",
+        limit: _LOAD_LIMIT,
+        where: predicates.item1,
+        whereArgs: predicates.item2,
+      ))
+          .map((m) => RSSItem.fromMap(m))
+          .toList();
+      allLoaded = items.length < _LOAD_LIMIT;
+      Global.itemsModel.loadItems(items);
+      iids = items.map((i) => i.id).toList();
+    } catch (exp) {
+      print(exp);
+    }
     loading = false;
     initialized = true;
     Global.feedsModel.broadcast();
@@ -87,8 +91,8 @@ class RSSFeed {
     loading = true;
     var predicates = _getPredicates();
     var offset = iids
-      .map((iid) => Global.itemsModel.getItem(iid))
-      .fold(0, (c, i) => c + (testItem(i) ? 1 : 0));
+        .map((iid) => Global.itemsModel.getItem(iid))
+        .fold(0, (c, i) => c + (testItem(i) ? 1 : 0));
     var items = (await Global.db.query(
       "items",
       orderBy: "date DESC",
@@ -96,7 +100,9 @@ class RSSFeed {
       offset: offset,
       where: predicates.item1,
       whereArgs: predicates.item2,
-    )).map((m) => RSSItem.fromMap(m)).toList();
+    ))
+        .map((m) => RSSItem.fromMap(m))
+        .toList();
     if (items.length < _LOAD_LIMIT) {
       allLoaded = true;
     }
