@@ -213,16 +213,16 @@ class _ArticleItemState extends State<ArticleItem> {
           ),
       ],
     ));
-    final itemTexts2 = Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.item.title,
-              style: _titleStyle2,
-            ),
-          ],
-        ));
+    final itemTexts2 = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // 使列最小化以适应其内容
+      children: [
+        Text(
+          widget.item.title,
+          style: _titleStyle2,
+        ),
+      ],
+    );
     final body = GestureDetector(
         onTapDown: (_) {
           setState(() {
