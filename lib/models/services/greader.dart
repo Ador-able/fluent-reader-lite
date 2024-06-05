@@ -96,18 +96,21 @@ class GReaderServiceHandler extends ServiceHandler {
   }
 
   int get lastFetched => _lastFetched;
+
   set lastFetched(int value) {
     _lastFetched = value;
     Store.sp.setInt(StoreKeys.LAST_FETCHED, value);
   }
 
   String get lastId => _lastId;
+
   set lastId(String value) {
     _lastId = value;
     Store.sp.setString(StoreKeys.LAST_ID, value);
   }
 
   String get auth => _auth;
+
   set auth(String value) {
     _auth = value;
     Store.sp.setString(StoreKeys.AUTH, value);
@@ -172,6 +175,7 @@ class GReaderServiceHandler extends ServiceHandler {
   }
 
   static final _authRegex = RegExp(r"Auth=(\S+)");
+
   @override
   Future<void> reauthenticate() async {
     if (!await validate()) {
@@ -306,29 +310,30 @@ class GReaderServiceHandler extends ServiceHandler {
   }
 
   @override
-  Future<void> markAllRead(Set<String> sids, DateTime date, bool before,{RSSFeed feed}) async {
+  Future<void> markAllRead(Set<String> sids, DateTime date, bool before,
+      {RSSFeed feed}) async {
     if (date != null) {
       List<String> predicates = ["hasRead = 0"];
-      var iids;
-      if(feed!=null){
-        iids=feed.iids.iterator;
-      }else{
-        if (sids.length > 0) {
-          predicates
-              .add("source IN (${List.filled(sids.length, "?").join(" , ")})");
-        }
-        if (date != null) {
-          predicates
-              .add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
-        }
-        final rows = await Global.db.query(
-          "items",
-          columns: ["iid"],
-          where: predicates.join(" AND "),
-          whereArgs: sids.toList(),
-        );
-        iids = rows.map((r) => r["iid"]).iterator;
+
+      if (sids.length > 0) {
+        predicates
+            .add("source IN (${List.filled(sids.length, "?").join(" , ")})");
       }
+      if (date != null) {
+        predicates
+            .add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
+      }
+      if (feed != null && feed.iids != null) {
+        predicates.add("iid IN (${feed.iids.join(", ")})");
+      }
+      final rows = await Global.db.query(
+        "items",
+        columns: ["iid"],
+        where: predicates.join(" AND "),
+        whereArgs: sids.toList(),
+      );
+      final iids = rows.map((r) => r["iid"]).iterator;
+
       List<String> refs = [];
       while (iids.moveNext()) {
         refs.add(iids.current);
