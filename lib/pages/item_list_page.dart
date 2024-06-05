@@ -233,7 +233,7 @@ class _ItemListPageState extends State<ItemListPage> {
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
                 Global.itemsModel.markAllRead(getFeed().sids,
-                    date: item.date, before: false);
+                    date: item.date, before: false,feed:getFeed());
               },
             ),
             CupertinoActionSheetAction(
@@ -244,7 +244,7 @@ class _ItemListPageState extends State<ItemListPage> {
               ], mainAxisAlignment: MainAxisAlignment.spaceBetween),
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
-                Global.itemsModel.markAllRead(getFeed().sids, date: item.date);
+                Global.itemsModel.markAllRead(getFeed().sids, date: item.date,feed:getFeed());
               },
             ),
             CupertinoActionSheetAction(

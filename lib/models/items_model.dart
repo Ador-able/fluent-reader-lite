@@ -1,3 +1,4 @@
+import 'package:fluent_reader_lite/models/feed.dart';
 import 'package:fluent_reader_lite/models/item.dart';
 import 'package:fluent_reader_lite/utils/global.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,7 @@ class ItemsModel with ChangeNotifier {
   bool has(String id) => _items.containsKey(id);
 
   RSSItem getItem(String id) => _items[id];
+
   Iterable<RSSItem> getItems() => _items.values;
 
   void loadItems(Iterable<RSSItem> items) {
@@ -17,24 +19,28 @@ class ItemsModel with ChangeNotifier {
     }
   }
 
-  Future<void> updateItem(String iid, 
-    {Batch batch, bool read, bool starred, local: false}) async {
+  Future<void> updateItem(String iid,
+      {Batch batch, bool read, bool starred, local: false}) async {
     Map<String, dynamic> updateMap = Map();
     if (_items.containsKey(iid)) {
       final item = _items[iid].clone();
       if (read != null) {
         item.hasRead = read;
         if (!local) {
-          if (read) Global.service.markRead(item);
-          else Global.service.markUnread(item);
+          if (read)
+            Global.service.markRead(item);
+          else
+            Global.service.markUnread(item);
         }
         Global.sourcesModel.updateUnreadCount(item.source, read ? -1 : 1);
       }
       if (starred != null) {
         item.starred = starred;
         if (!local) {
-          if (starred) Global.service.star(item);
-          else Global.service.unstar(item);
+          if (starred)
+            Global.service.star(item);
+          else
+            Global.service.unstar(item);
         }
       }
       _items[iid] = item;
@@ -45,30 +51,43 @@ class ItemsModel with ChangeNotifier {
       batch.update("items", updateMap, where: "iid = ?", whereArgs: [iid]);
     } else {
       notifyListeners();
-      await Global.db.update("items", updateMap, where: "iid = ?", whereArgs: [iid]);
+      await Global.db
+          .update("items", updateMap, where: "iid = ?", whereArgs: [iid]);
     }
   }
 
-  Future<void> markAllRead(Set<String> sids, {DateTime date, before = true}) async {
-    Global.service.markAllRead(sids, date, before);
+  Future<void> markAllRead(Set<String> sids,
+      {DateTime date, before = true, RSSFeed feed}) async {
+    Global.service.markAllRead(sids, date, before,feed: feed);
     List<String> predicates = ["hasRead = 0"];
     if (sids.length > 0) {
-      predicates.add("source IN (${List.filled(sids.length, "?").join(" , ")})");
+      predicates
+          .add("source IN (${List.filled(sids.length, "?").join(" , ")})");
     }
     if (date != null) {
-      predicates.add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
+      predicates
+          .add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
+    }
+    if (feed != null && feed.iids != null) {
+      predicates.add("iid IN (${feed.iids.join(", ")})");
     }
     await Global.db.update(
       "items",
-      { "hasRead": 1 },
+      {"hasRead": 1},
       where: predicates.join(" AND "),
       whereArgs: sids.toList(),
     );
     for (var item in _items.values.toList()) {
       if (sids.length > 0 && !sids.contains(item.source)) continue;
-      if (date != null && 
-        (before ? item.date.compareTo(date) > 0 : item.date.compareTo(date) < 0))
+      if(feed != null && feed.iids != null){
+        feed.iids.contains(item.id);
+        item.hasRead = true;
         continue;
+      }
+      if (date != null &&
+          (before
+              ? item.date.compareTo(date) > 0
+              : item.date.compareTo(date) < 0)) continue;
       item.hasRead = true;
     }
     notifyListeners();

@@ -10,6 +10,8 @@ import 'package:tuple/tuple.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluent_reader_lite/models/source.dart';
 
+import '../feed.dart';
+
 class GReaderServiceHandler extends ServiceHandler {
   static const _ALL_TAG = "user/-/state/com.google/reading-list";
   static const _READ_TAG = "user/-/state/com.google/read";
@@ -304,24 +306,29 @@ class GReaderServiceHandler extends ServiceHandler {
   }
 
   @override
-  Future<void> markAllRead(Set<String> sids, DateTime date, bool before) async {
+  Future<void> markAllRead(Set<String> sids, DateTime date, bool before,{RSSFeed feed}) async {
     if (date != null) {
       List<String> predicates = ["hasRead = 0"];
-      if (sids.length > 0) {
-        predicates
-            .add("source IN (${List.filled(sids.length, "?").join(" , ")})");
+      var iids;
+      if(feed!=null){
+        iids=feed.iids.iterator;
+      }else{
+        if (sids.length > 0) {
+          predicates
+              .add("source IN (${List.filled(sids.length, "?").join(" , ")})");
+        }
+        if (date != null) {
+          predicates
+              .add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
+        }
+        final rows = await Global.db.query(
+          "items",
+          columns: ["iid"],
+          where: predicates.join(" AND "),
+          whereArgs: sids.toList(),
+        );
+        iids = rows.map((r) => r["iid"]).iterator;
       }
-      if (date != null) {
-        predicates
-            .add("date ${before ? "<=" : ">="} ${date.millisecondsSinceEpoch}");
-      }
-      final rows = await Global.db.query(
-        "items",
-        columns: ["iid"],
-        where: predicates.join(" AND "),
-        whereArgs: sids.toList(),
-      );
-      final iids = rows.map((r) => r["iid"]).iterator;
       List<String> refs = [];
       while (iids.moveNext()) {
         refs.add(iids.current);

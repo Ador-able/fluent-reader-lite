@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:fluent_reader_lite/models/source.dart';
 import 'package:tuple/tuple.dart';
 
+import '../feed.dart';
 import '../service.dart';
 
 class FeverServiceHandler extends ServiceHandler {
@@ -196,7 +197,7 @@ class FeverServiceHandler extends ServiceHandler {
   }
 
   @override
-  Future<void> markAllRead(Set<String> sids, DateTime date, bool before) async {
+  Future<void> markAllRead(Set<String> sids, DateTime date, bool before,{RSSFeed feed}) async {
     if (date != null && !before) {
       var items = Global.itemsModel.getItems().where((i) =>
           (sids.length == 0 || sids.contains(i.source)) &&

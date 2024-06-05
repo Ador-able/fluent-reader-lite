@@ -9,6 +9,7 @@ import 'package:html/parser.dart';
 import 'package:tuple/tuple.dart';
 import 'package:http/http.dart' as http;
 
+import '../feed.dart';
 import '../item.dart';
 import '../source.dart';
 
@@ -211,7 +212,7 @@ class FeedbinServiceHandler extends ServiceHandler {
   }
 
   @override
-  Future<void> markAllRead(Set<String> sids, DateTime date, bool before) async {
+  Future<void> markAllRead(Set<String> sids, DateTime date, bool before,{RSSFeed feed}) async {
     List<String> predicates = ["hasRead = 0"];
     if (sids.length > 0) {
       predicates
