@@ -79,15 +79,11 @@ class ItemsModel with ChangeNotifier {
     );
     for (var item in _items.values.toList()) {
       if (sids.length > 0 && !sids.contains(item.source)) continue;
-      if(feed != null && feed.iids != null){
-        feed.iids.contains(item.id);
-        item.hasRead = true;
+      if (date != null && (before ? item.date.compareTo(date) > 0 : item.date.compareTo(date) < 0))
+        continue;
+      if(feed != null && feed.iids != null && !feed.iids.contains(item.id)){
         continue;
       }
-      if (date != null &&
-          (before
-              ? item.date.compareTo(date) > 0
-              : item.date.compareTo(date) < 0)) continue;
       item.hasRead = true;
     }
     notifyListeners();
